@@ -292,7 +292,7 @@ function UsedVehicleForm({ currentApp, type }: { currentApp: any, type: string }
       
       // Simulate API latency
       setTimeout(() => {
-        const upReg = regNo?.toUpperCase();
+        const upReg = (regNo || '').toUpperCase();
         
         // 10 Exact Non-EV Edge Case Personas for Demo
         const VAHAN_PERSONAS: Record<string, any> = {
