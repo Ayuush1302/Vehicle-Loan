@@ -46,7 +46,7 @@ export default function AccessStep() {
 
   const verifyForm = useForm({
     resolver: zodResolver(verifySchema),
-    defaultValues: { otp: '', termsAccepted: false }
+    defaultValues: { otp: '', termsAccepted: false as any }
   });
 
   const kycForm = useForm({
@@ -55,8 +55,8 @@ export default function AccessStep() {
       pan: '',
       nameOnPan: '',
       aadhaar: '',
-      consentKyc: false,
-      consentBureau: false
+      consentKyc: false as any,
+      consentBureau: false as any
     }
   });
 

@@ -16,7 +16,7 @@ export default function Home() {
   if (!user) return null;
 
   const handleNewLoan = () => {
-    const newId = createApplication();
+    createApplication();
     navigate(`/apply/asset`);
   };
 

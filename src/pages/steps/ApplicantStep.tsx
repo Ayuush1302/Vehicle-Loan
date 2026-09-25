@@ -42,7 +42,7 @@ export default function ApplicantStep() {
       email: existing?.email || '',
       employmentType: existing?.employmentType || undefined,
       employerName: existing?.employerName || '',
-      netMonthlyIncome: existing?.netMonthlyIncome || '',
+      netMonthlyIncome: existing?.netMonthlyIncome || undefined,
       existingEmis: existing?.existingEmis || 0,
       residenceType: existing?.residenceType || undefined,
       addressLine1: existing?.addressLine1 || '',

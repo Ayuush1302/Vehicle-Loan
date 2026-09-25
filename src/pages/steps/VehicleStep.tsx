@@ -37,8 +37,7 @@ const usedVehicleSchema = z.object({
 });
 
 export default function VehicleStep() {
-  const navigate = useNavigate();
-  const { currentAppId, applications, updateApplication } = useAppStore();
+  const { currentAppId, applications } = useAppStore();
   
   const currentApp = applications.find(a => a.id === currentAppId);
   if (!currentApp || !currentApp.asset) {
@@ -293,7 +292,7 @@ function UsedVehicleForm({ currentApp, type }: { currentApp: any, type: string }
       
       // Simulate API latency
       setTimeout(() => {
-        const upReg = regNo.toUpperCase();
+        const upReg = regNo?.toUpperCase();
         
         // 10 Exact Non-EV Edge Case Personas for Demo
         const VAHAN_PERSONAS: Record<string, any> = {

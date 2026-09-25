@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { calculateEMI, getIndicativeRate } from '../../config/loanLogic';
 import { VALUATION_PARAMS } from '../../config/valuation';
-import { ArrowRight, Info, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowRight, Info, ShieldCheck } from 'lucide-react';
 
 export default function LoanSetupStep() {
   const navigate = useNavigate();
@@ -15,6 +15,8 @@ export default function LoanSetupStep() {
   }
 
   const { asset, vehicle, valuation, loanSetup: existing } = currentApp;
+  
+  if (!asset || !vehicle) return <Navigate to="/apply/asset" replace />;
   
   const typeStr = `${asset.condition}_${asset.type}`;
   const params = VALUATION_PARAMS[typeStr as keyof typeof VALUATION_PARAMS];
@@ -66,7 +68,7 @@ export default function LoanSetupStep() {
   };
 
   // Generate tenure options in 6-month steps up to maxTenure
-  const tenureOptions = [];
+  const tenureOptions: number[] = [];
   for (let t = 6; t <= maxTenure; t += 6) {
     tenureOptions.push(t);
   }

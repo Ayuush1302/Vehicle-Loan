@@ -21,11 +21,7 @@ const STEPS = [
   { path: 'disbursal', label: '8 Disbursal' },
 ];
 
-const Placeholder = ({ name }: { name: string }) => (
-  <div className="p-8 text-center bg-gray-50 border border-dashed border-gray-200 rounded-xl">
-    <h3 className="text-xl font-bold text-gray-400">{name} - Coming Soon</h3>
-  </div>
-);
+
 
 export default function ApplyLayout() {
   const location = useLocation();

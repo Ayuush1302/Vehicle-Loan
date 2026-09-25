@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,7 +23,7 @@ export default function AssetStep() {
   const currentApp = applications.find(a => a.id === currentAppId);
   const existingAsset = currentApp?.asset;
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { handleSubmit, watch, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(assetSchema),
     defaultValues: {
       type: existingAsset?.type || undefined,

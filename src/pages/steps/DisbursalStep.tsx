@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
-import { CheckCircle2, Clock, Check, Building, ArrowRight, ShieldAlert, XCircle, FileText, Upload } from 'lucide-react';
+import { CheckCircle2, Clock, Check, Building, ArrowRight, ShieldAlert, FileText, Upload } from 'lucide-react';
 
 export default function DisbursalStep() {
   const navigate = useNavigate();

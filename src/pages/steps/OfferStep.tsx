@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { calculateEMI } from '../../config/loanLogic';
-import { FileText, CheckCircle2, ChevronDown, Download, Smartphone, Check, ArrowRight, Wallet, ShieldAlert } from 'lucide-react';
+import { FileText, ChevronDown, Download, Smartphone, Check, Wallet } from 'lucide-react';
 
 export default function OfferStep() {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ export default function OfferStep() {
     return <Navigate to="/apply/decision" replace />;
   }
 
-  const { decision, loanSetup, vehicle } = currentApp;
+  const { decision } = currentApp;
 
   // Sections unlocking state
   const [kfsOpened, setKfsOpened] = useState(false);

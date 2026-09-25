@@ -122,6 +122,13 @@ export interface ApplicationData {
       newToCredit: boolean;
     };
   };
+  // Step 7: Offer
+  offer?: {
+    accepted: boolean;
+    processingFee: number;
+    apr: number;
+    firstEmiDate: string;
+  };
   // Step 8: Disbursal
   disbursal?: {
     checklistCompleted: boolean;
