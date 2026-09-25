@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  /* Map semantic CSS variables to Tailwind colors */
+  --color-main: var(--bg-main);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-border-subtle: var(--border-subtle);
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-brand-primary: var(--accent-primary);
+
+  /* Keep legacy brand colors for components that haven't migrated yet */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: var(--accent-primary);
+  --color-brand-700: #1d4ed8;
+  --color-brand-900: #1e3a8a;
+}
+
+@layer base {
+  :root {
+    --bg-main: #f9f8f6;
+    --bg-surface: #ffffff;
+    --bg-elevated: #f0efe9;
+    --border-subtle: #e5e4de;
+    --text-primary: #1c1b1a;
+    --text-secondary: #5c5a56;
+    --accent-primary: #2E7D47;
+  }
+
+  .dark {
+    --bg-main: #0a0a09;
+    --bg-surface: #0f0f0d;
+    --bg-elevated: #1a1917;
+    --border-subtle: #292824;
+    --text-primary: #efece4;
+    --text-secondary: #9c988f;
+    --accent-primary: #348f52;
+  }
+
+  body {
+    @apply font-sans antialiased bg-[var(--bg-main)] text-[var(--text-primary)] transition-colors duration-200;
+  }
+
+  /* Helper class for financial figures */
+  .font-financial {
+    @apply font-mono tracking-tight;
+  }
+}

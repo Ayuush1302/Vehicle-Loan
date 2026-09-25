@@ -1,0 +1,453 @@
+# AutoFinAI Demo: Screen-Wise Feature Specification
+
+**Companion to:** PRD v2.0 (`docs/PRD.md`) | **Save as:** `docs/SCREEN_FEATURES.md` **Nature:** Client demo. Synthetic data, mocked services, illustrative policy numbers.
+
+## How to use this document
+
+- The PRD says **what** the product must do. This document says **where** each feature lives, screen by screen.
+- **Design rule:** existing screens keep their current look, layout, tokens, animations, and copy tone. New screens are built from existing components and visual patterns. Where this document says "reuse", do not create a new visual style.
+- **Status legend:** `EXISTING, ALTER` = screen exists, only the listed behaviour changes. `NEW` = screen does not exist yet. `UNCHANGED` = do not touch.
+- **Priority:** P0 = needed for client demo, P1 = should have, P2 = nice to have. PRD IDs are in brackets.
+
+---
+
+## 1. Screen inventory and flow
+
+| # | Screen | Status | Priority | Reached from |
+| --- | --- | --- | --- | --- |
+| G | Global shell (banner, footer, reset) | EXISTING, ALTER | P0 | Every screen |
+| S1 | Sign-up (onboarding gate, light) | EXISTING, ALTER | P0 | App start |
+| S2 | Borrower Home | EXISTING, ALTER | P0 | S1, end of any journey |
+| S3 | Step 1: Asset Category | EXISTING, ALTER | P0 | S2 "New loan" |
+| S4 | Step 2: Vehicle Details (New / Used) | EXISTING, ALTER | P0 | S3 |
+| S5 | Step 3: Valuation | EXISTING, ALTER | P0 | S4 |
+| S6 | Step 4: Loan Setup | NEW (reuses old Step 4 look) | P0 | S5 |
+| S7 | Step 5: Applicant & KYC | NEW | P0 | S6 |
+| S8 | Step 6: Decision | NEW | P0 | S7 |
+| S9 | Step 7: Offer & Sign | NEW (reuses old Step 4 look) | P0 | S8 |
+| S10 | Step 8: Pre-disbursal & Disbursal | NEW | P0 | S9 |
+| S11 | Loan Detail | NEW | P1 | S2 |
+| S12 | Dealer workspace | NEW | P0 | S1 (dealer entry) |
+| S13 | Credit officer queue | NEW | P1 | S1 (officer entry) |
+| S14 | Profile & Privacy | NEW (small) | P0 | S2 |
+
+```
+S1 → S2 → S3 → S4 → S5 → S6 → S7 → S8 ─┬─ Approved / Counter-offer → S9 → S10 → S2
+                                       ├─ Referred → S2 (status "Under review") ⇄ S13
+                                       └─ Declined → S2 (reasons shown)
+S12 (dealer) starts S3 on behalf of a borrower; the borrower consents on their own phone.
+```
+
+Stepper (inside S3-S10) shows 8 steps: **Asset · Vehicle · Valuation · Loan Setup · Applicant & KYC · Decision · Offer & Sign · Disbursal**.
+
+---
+
+## G. Global shell (on every screen)
+
+**Status:** EXISTING, ALTER | **Priority:** P0
+
+| Feature | Detail | PRD |
+| --- | --- | --- |
+| Demo indicator | Small persistent "DEMO: simulated data, no real loan" label in the existing header/footer area | §5.2 |
+| Footer disclosures | Company name, RBI registration placeholder, grievance officer name/email/phone placeholders | AUTH-6 |
+| Reset demo | Clears all mock data and drafts, returns to S1 (confirm first) | §5.2 |
+| Idle timeout | 10 minutes idle shows a resume prompt; draft is kept | AUTH-5 |
+| Persistence | Application state saved locally (synthetic data only) so refresh does not lose progress | §8 |
+
+**Do not change:** header layout, theme tokens, typography, page transitions.
+
+---
+
+## S1. Sign-up (onboarding gate, light)
+
+**Status:** EXISTING, ALTER | **Priority:** P0 | **PRD:** AUTH-1, AUTH-2, AUTH-4
+
+**Goal:** the shortest path from opening the app to the dashboard: two inputs, one OTP, one checkbox.
+
+**Keep as is:** screen layout, visual style, branding, transition into Home.
+
+**Add / change:**
+
+| Element | Behaviour |
+| --- | --- |
+| Mobile number | 10-digit Indian mobile (starts 6-9) |
+| OTP | Mock OTP `123456`; 3 attempts, 30 s resend timer, lockout message after 3 failures |
+| Name | Required, letters and spaces |
+| Terms and privacy | **One** un-ticked checkbox: "I agree to the Terms and have read the Privacy Notice". Notice link opens a simple static modal/page. Continue is disabled until ticked |
+| Returning user | Known mobile + OTP goes straight to the dashboard and skips the name field (mock) |
+| Entry mode | Small secondary link "I'm a dealer" / "I'm a credit officer" leading to S12 / S13 login (mock IDs) |
+
+**Removed from this screen:** PAN field, PAN verification, and the KYC / bureau / data-processing consents. They now live at the start of S7 (APP-0), where the data is first needed.
+
+**States:** empty · invalid mobile · OTP wrong · OTP locked · loading · success. **Data out:** `borrower {mobile, name, termsAcceptedAt, termsVersion}`. **Mock services:** `otpService`. **Exit:** S2 Borrower Home, immediately.
+
+---
+
+## S2. Borrower Home
+
+**Status:** EXISTING, ALTER | **Priority:** P0 | **PRD:** HOME-1, 2, 4, 5, 6
+
+**Keep as is:** greeting, "New loan" CTA, list card styling, logout.
+
+**Access rule:** the dashboard opens right after sign-up and is never gated on PAN, KYC or consent (HOME-6). Those are asked only when the borrower starts a loan application, at S7.
+
+**Add / change:**
+
+| Element | Behaviour |
+| --- | --- |
+| Application list | Show **all** applications, not only sanctioned: reference, vehicle, amount, tenure, EMI, status, last updated |
+| Status chips | Draft · Submitted · In Review · Referred · Declined · Offered · Accepted · Pending Disbursal · Active · Closed · Expired · Withdrawn · Cooled-off (use the existing chip/label style; no new colour system) |
+| Row actions | Draft → **Resume** (opens last completed step). Offered → **View offer**. Declined → **View reasons**. Active → **View loan** (S11). Referred → shows "Under review" |
+| Declined reasons | Expand to show principal reasons in plain language |
+| Grievance card | How to raise a complaint, escalation path, RBI complaint portal pointer |
+| Profile link | Opens S14 |
+| Logout | Clears session; drafts stay keyed to the mobile number |
+
+**Empty state:** "No applications yet" with the New loan CTA. **Exit:** S3 (new loan), S4-S9 (resume), S11, S14.
+
+---
+
+## S3. Step 1: Asset Category
+
+**Status:** EXISTING, ALTER | **Priority:** P0 | **PRD:** AST-1..4
+
+**Keep as is:** 2W/4W and New/Used selectors, stepper, animation.
+
+**Add / change:**
+
+| Element | Behaviour |
+| --- | --- |
+| Seller type (Used only) | Radio: Dealer / Individual. Appears after Used is selected. Drives extra conditions in S10 |
+| Use type | Fixed "Personal". If a commercial option is shown, it displays "Not supported in this demo" |
+| Change confirmation | Changing type or condition after data entry shows a confirm ("This will clear vehicle and valuation details"). Silent reset is removed |
+| Dealer context | If started from S12, dealer name/ID is shown read-only |
+
+**Data out:** `asset {type, condition, sellerType?, useType}`.
+
+---
+
+## S4. Step 2: Vehicle Details
+
+**Status:** EXISTING, ALTER | **Priority:** P0 | **PRD:** NEW-1..5, USD-1..6
+
+**Keep as is:** form layout, grouping, input styling, the New/Used form switch.
+
+### 4a. New vehicle form
+
+| Field | Type | Rule |
+| --- | --- | --- |
+| Make → Model → Variant → Fuel | Cascading selects (replaces free text) | Options filtered from mock catalogue (max 3 makes per vehicle type) |
+| City / RTO | Select | Drives ex-showroom and road tax |
+| Ex-showroom price | **Read-only, auto-filled** | Catalogue lookup by variant + city |
+| RTO / road tax | Read-only computed | Rule table by state, fuel, price slab; EV exemption configurable |
+| Insurance | Estimate; editable only within a band |  |
+| Optional extras | Accessories, extended warranty, handling: separate lines, **unchecked by default** |  |
+| On-road price | Computed with a visible breakdown |  |
+| Dealer name/ID | Text; pre-filled in dealer mode |  |
+| Quotation / proforma no. | Text + mock upload |  |
+
+### 4b. Used vehicle form
+
+| Field | Type | Rule |
+| --- | --- | --- |
+| Registration number | Text | Format-validated; state derived |
+| Date of first registration, Manufacture year | Date / year | Registration cannot precede manufacture |
+| Make → Model → Variant → Fuel | Cascading selects | From catalogue |
+| Owner count | Select 1 / 2 / 3+ |  |
+| Odometer | **Exact km** number | Bands derived internally (2W and 4W thresholds differ) |
+| Insurance valid till | Date | Expired insurance shows a pre-disbursal condition |
+| Agreed purchase price | Currency |  |
+| Hypothecation | Clear / Active | **Active** → requires existing financier name; creates a pre-disbursal condition (closure proof + NOC + Form 35) |
+| Chassis / engine last 5 | Text (P1) |  |
+| Photos (P1) | Mock upload | Front, rear, odometer, RC |
+| Colour, Engine CC | **Optional** (P1 change from required) |  |
+| RC lookup | Mock "Fetch RC details" action | Mismatch with entered data becomes a flag in S8 |
+
+**States:** invalid combination blocked · price not found for city · hypothecation Active banner (informational, not an error). **Data out:** `vehicle {...}` plus `conditions[]` (e.g. `HYPOTHECATION_CLOSURE`).
+
+---
+
+## S5. Step 3: Valuation
+
+**Status:** EXISTING, ALTER | **Priority:** P0 | **PRD:** VAL-1..6
+
+**Keep as is:** the summary card look and the "Continue" pattern.
+
+**Add / change:**
+
+| Element | Behaviour |
+| --- | --- |
+| Label | "Indicative valuation. Subject to credit assessment and, for used vehicles, physical inspection." Never called sanction or approval |
+| Funding base | New: on-road price (capped at quotation). Used: min(agreed price, computed value) |
+| Inputs-used block | Age, odometer band, owner factor, depreciation % applied |
+| Outputs | Base value, LTV %, **Max loan**, **Max tenure**, **down payment range** |
+| Hard ineligibility | Vehicle age beyond cap; active hypothecation with no closure path; funding base below minimum ticket. Clear message + "Change vehicle" action |
+
+**Rules:** all parameters come from `policy.ts` (illustrative). Age = (today − first registration) / 365.25. **Note:** rate shown here (if any) is labelled indicative. **Data out:** `valuation {baseValue, ltv, maxLoan, maxTenure, downPaymentMin, downPaymentMax, ruleVersion}`.
+
+---
+
+## S6. Step 4: Loan Setup
+
+**Status:** NEW (built from the old Step 4 look) | **Priority:** P0 | **PRD:** LS-1..3
+
+| Element | Behaviour |
+| --- | --- |
+| Loan amount slider + input | From minimum ticket to Max loan |
+| Tenure selector | 6-month steps up to Max tenure |
+| Live summary | EMI, down payment (= price − loan), total interest, total payable |
+| Indicative rate | Labelled "Indicative rate. Final rate is set after credit assessment." |
+| Optional add-ons | Credit-life or similar: shown, **unchecked by default**, not required for approval |
+| Save draft | Status becomes Draft; appears on S2 |
+
+**Edge cases:** amount below minimum · tenure exceeds max after later age check (handled in S7). **Data out:** `loanRequest {amount, tenure, indicativeRate, addOns[]}`.
+
+---
+
+## S7. Step 5: Applicant & KYC
+
+**Status:** NEW | **Priority:** P0 | **PRD:** APP-0..2, KYC-1..4
+
+Single step with collapsible sections in the existing form style.
+
+### 7-0. PAN and consents (first thing in this step)
+
+This is the first point where PAN and consent are requested, because this is where the data is first needed.
+
+| Element | Behaviour |
+| --- | --- |
+| PAN | Regex `^[A-Z]{5}[0-9]{4}[A-Z]$`, 4th character `P`, auto-uppercase. Mocked verify returns Match / Partial / Mismatch. Mismatch offers a correction path (borrower confirms the PAN name replaces the sign-up name). Masked after entry. The mock PAN selects the demo persona (see §3) |
+| Consents | Three **separate, un-ticked** checkboxes: (a) KYC, (b) credit bureau check, (c) processing personal data for this application. Purpose stated for each. Logged with ID, version, timestamp and application reference |
+| Per application | Bureau consent is asked again for each new application. It is not silently reused |
+| Decline | If a consent is declined, a message explains what cannot proceed, the draft is kept, and the borrower returns to S2. Data from Steps 1-4 is not lost |
+| Drop-off (P1) | Pre-fill name and mobile, save per section, short "what we need and why" summary |
+
+The rest of this step (7a to 7d) unlocks after PAN is verified and consents (a) to (c) are ticked.
+
+### 7a. Personal and financial profile
+
+| Field | Rule |
+| --- | --- |
+| DOB | Age gate: ≥ 21 at application; ≤ 65 (salaried) / 70 (self-employed) at maturity (config) |
+| Employment type | Salaried / Self-employed |
+| Employer / business name | Text |
+| Net monthly income | Currency |
+| Existing monthly EMIs | Currency |
+| Residence type, address, pincode | Select / text / 6-digit |
+| Email | Format-validated |
+| Name | Pre-filled from PAN verification, read-only |
+
+### 7b. KYC
+
+- **Aadhaar e-KYC / DigiLocker (mock):** consent → OTP → returns name, DOB, address, masked Aadhaar (last 4 only). (P0)
+- **CKYC lookup (mock):** if found, skip re-collection. (P0)
+- **Selfie / video KYC (mock):** P2.
+
+### 7c. Bank account
+
+Account number, IFSC, account-holder name (mock name match). Used for the mandate and refunds.
+
+### 7d. Documents (P1)
+
+Mock upload with state: uploaded · verifying · accepted · rejected ("blurred" reason). Income proof (all), RC copy (used), quotation (new).
+
+**Validation on Continue:** re-check age/tenure caps. If tenure now exceeds the age-at-maturity limit, prompt to go back to S6 and reduce tenure. **Data out:** `pan {masked, verified, nameMatch}`, `consents[{id, purpose, version, timestamp, applicationRef}]`, `applicant {...}`, `kyc {status, method, aadhaarLast4}`, `bank {...}`. **Mock services:** `kycService`, `ckycService`, `bankVerifyService`, `docService`.
+
+---
+
+## S8. Step 6: Decision
+
+**Status:** NEW | **Priority:** P0 | **PRD:** UW-1..4, UW-6
+
+A processing state ("Assessing your application") leads to **one of four outcome views**. Outcome is driven by the mock PAN (see §3).
+
+| Outcome | What the borrower sees | Next |
+| --- | --- | --- |
+| **Approved** | Confirmation, final rate, amount, tenure | S9 |
+| **Counter-offer** | Revised amount / tenure / rate with plain-language reason(s). Actions: Accept revised, Modify, Withdraw | S9, S6, or S2 |
+| **Referred** | "Under review" with expected turnaround; application appears on S2 as Referred | S2 (officer decides in S13) |
+| **Declined** | Principal reasons in plain language, downloadable summary, what could change the outcome where policy allows. No dead end | S2 |
+
+**Engine (behind the screen):** bureau pull (mock, uses the consent captured in S7) → policy rules (score bands, FOIR, age gates, negative list, RC mismatch, LTV recheck) → decision + reason codes + rule version stored. **Rules:** deterministic and explainable. No "AI" wording. Reason codes are internal; the borrower sees plain-language text. **Data out:** `decision {outcome, reasonCodes[], finalRate, finalAmount, finalTenure, ruleVersion, bureauSummary}`.
+
+---
+
+## S9. Step 7: Offer & Sign
+
+**Status:** NEW (built from the old Step 4 look) | **Priority:** P0 | **PRD:** OFR-1..7
+
+Three stacked sections, in order. Each unlocks the next.
+
+### 9a. Offer summary
+
+Amount, tenure, rate type (fixed/floating), interest rate, **APR**, EMI, first EMI date, processing fee + GST, other itemised charges, penal charge terms, prepayment/foreclosure terms, insurance (if any), cooling-off period, total interest, total payable, **offer validity date**.
+
+### 9b. Key Fact Statement
+
+- Displayed **before** acceptance, in the standard KFS structure, with full amortisation schedule (scrollable table).
+- Downloadable PDFs: sanction letter (ref `SL-YYYY-######`), KFS, draft agreement.
+- Hindi toggle: P1.
+
+### 9c. Accept, sign, mandate
+
+1. Tick "I have read the KFS and accept the terms" (enabled only after the KFS was opened/scrolled).
+2. Mock **e-sign** (OTP).
+3. Mock **e-mandate** (e-NACH / UPI Autopay) against the bank account from S7; shows first EMI date.
+4. Confirmation: documents "sent" to registered mobile/email (mock).
+
+**No single-click Accept.** Reference and sanction IDs come from a mock service. **Expiry:** after N days (config, default 7) status becomes Expired and the screen prompts to refresh. **Data out:** `offer {...}`, `signature {timestamp, method}`, `mandate {status, firstEmiDate}`. Status → Mandate Set.
+
+---
+
+## S10. Step 8: Pre-disbursal & Disbursal
+
+**Status:** NEW | **Priority:** P0 | **PRD:** PRE-1..3, DIS-1..3
+
+### 10a. Pre-disbursal checklist
+
+Each item shows Pending / Verified / Failed.
+
+| Case | Checklist items |
+| --- | --- |
+| All | Comprehensive insurance with lender's hypothecation noted |
+| New | Dealer invoice matches quotation · margin money (down payment) received by dealer |
+| Used, from dealer | Inspection/valuation report · dealer invoice |
+| Used, from individual | Seller KYC · transfer papers (Forms 29/30) · seller consent |
+| Active hypothecation | Existing-loan closure proof · NOC · Form 35 |
+
+**Inspection outcome (used):** a value drop (e.g. −8%) re-runs LTV and may reduce the loan amount. Show revised figures and require **re-acceptance** if the amount changes.
+
+### 10b. Disbursal
+
+Shows **beneficiary** (dealer/seller name, masked account) and amount. Never shown as paid to an intermediary or agent. Mock "Release funds" (demo action).
+
+### 10c. Post-disbursal timeline and cooling-off
+
+- Timeline: Disbursed → hypothecation initiated at RTO (Form 34) → RC with HP endorsement received (mock upload) → Complete.
+- **Cooling-off window** (config, minimum 1 day, disclosed in KFS): "Exit without penalty" action showing principal + proportionate interest, and any disclosed one-time processing fee. Confirm step before exit; status becomes Cooled-off.
+
+**Data out:** `checklist[]`, `disbursal {beneficiary, amount, date}`, `hypothecation {status}`.
+
+---
+
+## S11. Loan Detail
+
+**Status:** NEW | **Priority:** P1 | **PRD:** HOME-3, SRV-1..4
+
+| Element | Behaviour |
+| --- | --- |
+| Summary | Amount, rate, APR, EMI, tenure, next due date, paid vs outstanding |
+| EMI schedule | Table with paid / due / overdue states (mock history) |
+| Documents | Sanction letter, KFS, agreement (re-download) |
+| Prepayment / foreclosure | Quote with charges per KFS rate type (floating-rate individual: zero) |
+| Penal charge | Flat, separate line; not compounded |
+| Closure | NOC / Form 35 status tracker |
+
+---
+
+## S12. Dealer workspace
+
+**Status:** NEW | **Priority:** P0 | **PRD:** DLR-1..4
+
+| Element | Behaviour |
+| --- | --- |
+| Dealer login | Mock dealer ID + name |
+| Application list | Only this dealer's applications with status and next action |
+| Start application | Enter borrower mobile → **borrower receives the sign-up OTP on their own phone** (mock: OTP screen simulates this) → dealer continues at S3 with dealer ID pre-filled. The KYC/bureau consents in S7 are also given by the borrower on their own device |
+| Visibility limits | Dealer never sees bureau score, income documents, or full PAN |
+| Payout | Dealer payout/commission is **not** shown anywhere in the borrower flow |
+
+Use existing list and form patterns. No new visual style.
+
+---
+
+## S13. Credit officer queue
+
+**Status:** NEW | **Priority:** P1 | **PRD:** UW-5, PRE-3
+
+| Element | Behaviour |
+| --- | --- |
+| Queue | Referred applications: reference, applicant, vehicle, amount, reason codes, age in queue |
+| Detail view | Bureau summary, FOIR, flags (RC mismatch, no-hit), documents |
+| Actions | Approve · Counter-offer · Decline, each with a **mandatory override reason** |
+| Audit log | Who, when, action, reason, rule version |
+| Pre-disbursal clearing | Officer can mark checklist conditions as cleared (PRE-3) |
+
+---
+
+## S14. Profile & Privacy
+
+**Status:** NEW (small) | **Priority:** P0 | **PRD:** AUTH-4, CMP-1
+
+| Element | Behaviour |
+| --- | --- |
+| Profile | Name, masked PAN, mobile |
+| Consent history | List of consents with purpose, version, timestamp. Empty until the borrower starts an application (consents are captured in S7) |
+| Withdraw consent | Per consent (mock); explains what stops working |
+| Delete my data | Confirmation → clears local mock data → S1 |
+
+---
+
+## 2. Cross-screen reference: which screen owns which requirement
+
+| Screen | Requirement IDs |
+| --- | --- |
+| G | AUTH-5, AUTH-6, §5.2 |
+| S1 | AUTH-1, AUTH-2 |
+| S2 | HOME-1, HOME-2, HOME-4, HOME-5, HOME-6 |
+| S3 | AST-1, AST-2, AST-3, AST-4 |
+| S4 | NEW-1..5, USD-1..6 |
+| S5 | VAL-1..6 (VAL-7 P1) |
+| S6 | LS-1..3 |
+| S7 | APP-0 (replaces AUTH-3), APP-1, APP-2, KYC-1..4 |
+| S8 | UW-1..4, UW-6 |
+| S9 | OFR-1..7 |
+| S10 | PRE-1..3, DIS-1..3 |
+| S11 | HOME-3, SRV-1..4 |
+| S12 | DLR-1..4 |
+| S13 | UW-5, PRE-3 |
+| S14 | AUTH-4, CMP-1 |
+
+---
+
+## 3. Demo scenarios mapped to screens
+
+The mock PAN is typed at the start of S7, not at sign-up. Paths below start at S1 for a new borrower.
+
+| Scenario | Mock PAN | Screens visited | Highlight |
+| --- | --- | --- | --- |
+| Strong salaried, straight-through | `ABCPD1001A` | S1→S2→S3→S4→S5→S6→S7→S8→S9→S10 | Full happy path |
+| Thin file, referred | `ABCPD2002B` | …S8→S2→S13→S2→S9→S10 | Officer approval with reduced LTV |
+| Stretched obligations | `ABCPD3003C` | …S8 (counter-offer)→S9 | Reduced amount |
+| Weak history | `ABCPD4004D` | …S8→S2 | Decline with reasons |
+| Negative-list hit | `ABCPD5005E` | …S8→S2 | Neutral decline wording |
+| Used 4W, Active hypothecation | any approvable PAN | S3→S4→S10 | Disbursal blocked until closure proof |
+| Used vehicle over age cap | any | S4→S5 | Ineligible or reduced tenure |
+| Inspection value drop | any | S10 | Re-acceptance required |
+| Cooling-off exit | any | S10 | Penalty-free exit |
+| Offer expiry | any | S9 | Expired status |
+| Dealer-assisted 2W | approvable PAN | S12→S3→…→S10 | Borrower consents on own phone |
+
+---
+
+## 4. Build order by screen (maps to implementation phases)
+
+| Phase | Screens | Notes |
+| --- | --- | --- |
+| 1 Foundations | G (state, persistence, services, config) | No UI beyond banner |
+| 2 Access & Home | S1, S2, S14 |  |
+| 3 Asset & Vehicle | S3, S4 |  |
+| 4 Valuation & Loan Setup | S5, S6 | Unit-test the calculations here |
+| 5 Applicant, KYC, Decision | S7, S8 | Persona selector lives here |
+| 6 Offer & Sign | S9 | PDFs, KFS, amortisation schedule |
+| 7 Disbursal, Dealer, Officer | S10, S12, S13, S11 (P1) |  |
+| 8 Verification | All | E2E per §3 scenarios |
+
+---
+
+## 5. Explicitly not changing
+
+- Visual design tokens, typography, icon set, animation approach.
+- Page transition behaviour and stepper component (extended, not redesigned).
+- Any screen or component not listed above.
+- No new UI library, routing library, or design system.
